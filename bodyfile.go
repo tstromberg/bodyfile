@@ -69,6 +69,38 @@ func (r *Reader) AddFilter(filter string) (err error) {
 	return err
 }
 
+// parse seconds from 1970 as a float or int, return time
+func parseTimeFloatString(s string) (time.Time, error) {
+	// it's an integer
+	if !strings.Contains(s, ".") {
+		sec, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("parseint: %w", err)
+		}
+		return time.Unix(sec, 0).UTC(), nil
+	}
+
+	v := strings.Split(s, ".")
+	// pad the float so that it becomes nanoseconds
+	if len(v[1]) > 0 {
+		for len(v[1]) < 9 {
+			v[1] += "0"
+		}
+	}
+
+	sec, err := strconv.ParseInt(v[0], 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parseint: %w", err)
+	}
+
+	nsec, err := strconv.ParseInt(v[1], 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parseint: %w", err)
+	}
+
+	return time.Unix(sec, nsec).UTC(), nil
+}
+
 func fieldsToEntry(fields []string) (*Entry, error) {
 	if len(fields) < 11 {
 		return nil, fmt.Errorf("Invalid bodyfile format, expected 11 fields, got %d", len(fields))
@@ -115,29 +147,29 @@ func fieldsToEntry(fields []string) (*Entry, error) {
 	}
 	e.Size = i
 
-	i, err = strconv.ParseInt(fields[7], 10, 64)
+	t, err := parseTimeFloatString(fields[7])
 	if err != nil {
 		return nil, fmt.Errorf("AccessTime was not an integer: %s", err)
 	}
-	e.AccessTime = time.Unix(i, 0).UTC()
+	e.AccessTime = t
 
-	i, err = strconv.ParseInt(fields[8], 10, 64)
+	t, err = parseTimeFloatString(fields[8])
 	if err != nil {
 		return nil, fmt.Errorf("ModificationTime was not an integer: %s", err)
 	}
-	e.ModificationTime = time.Unix(i, 0).UTC()
+	e.ModificationTime = t
 
-	i, err = strconv.ParseInt(fields[9], 10, 64)
+	t, err = parseTimeFloatString(fields[9])
 	if err != nil {
 		return nil, fmt.Errorf("ChangeTime was not an integer: %s", err)
 	}
-	e.ChangeTime = time.Unix(i, 0).UTC()
+	e.ChangeTime = t
 
-	i, err = strconv.ParseInt(fields[10], 10, 64)
+	t, err = parseTimeFloatString(fields[10])
 	if err != nil {
 		return nil, fmt.Errorf("CreationTime was not an integer: %s", err)
 	}
-	e.CreationTime = time.Unix(i, 0).UTC()
+	e.CreationTime = t
 
 	return &e, nil
 }

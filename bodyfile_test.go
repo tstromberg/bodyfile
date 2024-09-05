@@ -52,6 +52,15 @@ func Test_InodeIsNotANumber(t *testing.T) {
 	}
 }
 
+func Test_FloatTimes(t *testing.T) {
+	input := `0|c:/$MFT|0-128-12|r/rrwxrwxrwx|0|0|196870144|1689087082.1|1689087082.2|1689087082.3|1689087082.424`
+	r := NewReader(bytes.NewBufferString(input))
+	_, err := r.Read()
+	if err != nil {
+		t.Errorf("Could not read: %s", err)
+	}
+}
+
 func Test_BodyfileParsing(t *testing.T) {
 	// 2009-07-13T23:29:31Z    74240 .a.b 0 454      0        36434    \.\Windows\System32\oobe\audit.exe
 	// 2009-07-14T01:38:55Z    74240 m... 0 454      0        36434    \.\Windows\System32\oobe\audit.exe
